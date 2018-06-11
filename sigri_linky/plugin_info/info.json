@@ -1,0 +1,11 @@
+{
+	"id" : "sigri_linky",
+	"name" : "Sigri Linky",
+	"licence" : "AGPL",
+	"author" : "Sigri44",
+	"require" : "3.0",
+	"category" : "energy",
+	"hasDependency" : false,
+	"hasOwnDeamon" : false,
+	"maxDependancyInstallTime" : 0
+}

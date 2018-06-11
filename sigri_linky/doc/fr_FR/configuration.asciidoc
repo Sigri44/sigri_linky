@@ -1,0 +1,9 @@
+=== Configuration du plugin
+
+Si vous n'avez pas encore de compte Enedis, vous pouvez l'ouvrir sur l'URL ci-après :
+https://espace-client-particuliers.enedis.fr/web/espace-particuliers/creation-de-compte
+
+Ce plugin historise vos donnees, vous devez avoir donc un equipement non visible pour ne pas l'avoir en dashboard.
+Pour acceder aux donnees : creer une vue, un design pour charger le graphique, ou consulter l'historique.
+
+Vos données seront recupere une fois par heure

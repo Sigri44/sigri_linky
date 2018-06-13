@@ -27,11 +27,13 @@
    		<div class="form-group">
         <label class="col-lg-4 control-label">{{Fonctionnement du plugin}}</label>
         <div class="col-lg-5">
-          Ce plugin utilise le site Enedis pour obtenir les informations de votre consommation depuis votre compteur Linky<br>
+          Ce plugin utilise le site Enedis pour obtenir les informations de votre consommation depuis votre compteur Linky<br />
           Si vous n'avez pas encore de compte Enedis, vous pouvez l'ouvrir 
           <a href="https://espace-client-particuliers.enedis.fr/web/espace-particuliers/creation-de-compte" target="_blank" > en cliquant ici</a>.<br>
-          Ce plugin historise vos donnees, vous devez avoir donc un equipement non visible pour ne pas l'avoir en dashboard.<br>
+          Ce plugin historise vos donnees, vous devez avoir donc un equipement non visible pour ne pas l'avoir en dashboard.<br />
           Pour acceder aux donnees : creer une vue, un design pour charger le graphique, ou consulter l'historique.
+	  <br /><br />
+	  *Librement inspiré du module d'Edouard Marchand, sous license AGPL.
         </div>
       </div>
     </fieldset>

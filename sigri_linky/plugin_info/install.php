@@ -20,7 +20,7 @@
 
 	function sigri_linky_install() {
 	  $random_minutes = rand(1, 59);
-	  $crontab_schedule = $random_minutes." 4-23/5 * * *";
+	  $crontab_schedule = $random_minutes." 5-23/5 * * *";
 	  $cron = cron::byClassAndFunction('sigri_linky', 'launch_sigri_linky');
 	  if (!is_object($cron)) {
 		$cron = new cron();
@@ -35,7 +35,7 @@
 
 	function sigri_linky_update() {
 	  $random_minutes = rand(1, 59);
-	  $crontab_schedule = $random_minutes." */6 * * *";
+	  $crontab_schedule = $random_minutes." 5-23/5 * * *";
 	  $cron = cron::byClassAndFunction('sigri_linky', 'launch_sigri_linky');
 	  if (!is_object($cron)) {
 		$cron = new cron();

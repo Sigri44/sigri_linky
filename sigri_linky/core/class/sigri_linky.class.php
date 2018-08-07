@@ -17,9 +17,10 @@
  */
 
 /* * ***************************Includes********************************* */
-require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
+require_once __DIR__ . '/../../../../core/php/core.inc.php';
 
-class sigri_linky extends eqLogic {
+class sigri_linky extends eqLogic 
+{
     /*     * *************************Attributs****************************** */
 
 
@@ -50,7 +51,7 @@ class sigri_linky extends eqLogic {
 
     /*     * *********************Méthodes d'instance************************* */
 
-    public function preInsert() {
+    /*public function preInsert() {
         
     }
 
@@ -64,9 +65,10 @@ class sigri_linky extends eqLogic {
 
     public function postSave() {
         
-    }
+    }*/
 
-    public function preUpdate() {
+    public function preUpdate() 
+    {
       if (empty($this->getConfiguration('identifiant'))) {
         throw new Exception(__('L\'identifiant ne peut pas être vide',__FILE__));
       }
@@ -76,9 +78,9 @@ class sigri_linky extends eqLogic {
       }
     }
 
-    public function postUpdate() {
-      if ( $this->getIsEnable() )
-      {
+    public function postUpdate() 
+    {
+      if ( $this->getIsEnable() ){
         $cmd = $this->getCmd(null, 'consoheure');
         if ( ! is_object($cmd)) {
           $cmd = new sigri_linkyCmd();
@@ -93,6 +95,7 @@ class sigri_linky extends eqLogic {
           $cmd->save();   
         }    
         $cmd = $this->getCmd(null, 'consojour');
+          
         if ( ! is_object($cmd)) {
           $cmd = new sigri_linkyCmd();
           $cmd->setName('Consommation journalière');
@@ -106,6 +109,7 @@ class sigri_linky extends eqLogic {
           $cmd->save();   
         }  
         $cmd = $this->getCmd(null, 'consomois');
+          
         if ( ! is_object($cmd)) {
           $cmd = new sigri_linkyCmd();
           $cmd->setName('Consommation Mensuelle');
@@ -119,6 +123,7 @@ class sigri_linky extends eqLogic {
           $cmd->save();   
         }  
         $cmd = $this->getCmd(null, 'consoan');
+          
         if ( ! is_object($cmd)) {
           $cmd = new sigri_linkyCmd();
           $cmd->setName('Consommation annuelle');
@@ -135,7 +140,7 @@ class sigri_linky extends eqLogic {
       }
     }
 
-    public function preRemove() {
+    /*public function preRemove() {
         
     }
 
@@ -152,7 +157,8 @@ class sigri_linky extends eqLogic {
 
     /*     * **********************Getteur Setteur*************************** */
 
-    public static function launch_sigri_linky() {
+    public static function launch_sigri_linky() 
+    {
       foreach (eqLogic::byType('sigri_linky', true) as $sigri_linky) {
       
         log::add('sigri_linky', 'info', 'Debut d\'interrogration Enedis');
@@ -217,7 +223,8 @@ class sigri_linky extends eqLogic {
       }
     }
 
-    public function Login_Enedis_API($Useragent) {
+    public function Login_Enedis_API($Useragent) 
+    {
 
       log::add('sigri_linky', 'debug', 'Tentative d\'authentification sur Enedis');
 
@@ -342,7 +349,8 @@ class sigri_linky extends eqLogic {
 
     }
 
-    public function Call_Enedis_API($cookies, $Useragent, $resource_id, $start_datetime=None, $end_datetime=None) {
+    public function Call_Enedis_API($cookies, $Useragent, $resource_id, $start_datetime=None, $end_datetime=None) 
+    {
 
       $URL_CONSO = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers/suivi-de-consommation";
 
@@ -399,7 +407,8 @@ class sigri_linky extends eqLogic {
 
     }
 
-    public function Enedis_Results_Jeedom($resource_id, $content, $start_datetime) {
+    public function Enedis_Results_Jeedom($resource_id, $content, $start_datetime) 
+    {
 
       $obj = json_decode($content, true);
       log::add('sigri_linky', 'debug',var_dump($obj));
@@ -458,7 +467,8 @@ class sigri_linky extends eqLogic {
 
     }
     
-    public function GetUserAgent() {
+    public function GetUserAgent() 
+    {
 
       $useragents = array(
       "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.19 (KHTML, like Gecko) Chrome/1.0.154.53 Safari/525.19",
@@ -558,4 +568,4 @@ class sigri_linkyCmd extends cmd {
     /*     * **********************Getteur Setteur*************************** */
 }
 
-?>
+

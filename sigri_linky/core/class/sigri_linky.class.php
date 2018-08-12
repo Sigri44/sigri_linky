@@ -23,8 +23,6 @@ class sigri_linky extends eqLogic
 {
     /*     * *************************Attributs****************************** */
 
-
-
     /*     * ***********************Methode static*************************** */
 
     /*
@@ -46,8 +44,6 @@ class sigri_linky extends eqLogic
 
       }
      */
-
-
 
     /*     * *********************Méthodes d'instance************************* */
 
@@ -140,7 +136,7 @@ class sigri_linky extends eqLogic
       }
     }
 
-    /*public function preRemove() {
+    public function preRemove() {
         
     }
 
@@ -211,10 +207,8 @@ class sigri_linky extends eqLogic
                   $start_date->sub(new DateInterval('P5Y'));
                   $sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcAn", $start_date, $end_date);
                 }
-                
               }
             }
-
             log::add('sigri_linky', 'info', 'Fin d\'interrogration Enedis');
           } else {
             log::add('sigri_linky', 'error', 'Identifiants requis');
@@ -360,8 +354,8 @@ class sigri_linky extends eqLogic
       $end_date = $end_datetime->format('d/m/Y');
       
       $data = array(
-          $prefix."dateDebut"."=".$start_date,
-          $prefix."dateFin"."=".$end_date
+            $prefix."dateDebut"."=".$start_date,
+            $prefix."dateFin"."=".$end_date
       );
 
       $param = array(
@@ -398,9 +392,9 @@ class sigri_linky extends eqLogic
         curl_close($ch);
 
         if ($http_status == "200") { 
-          $this->Enedis_Results_Jeedom($resource_id, $content, $start_datetime);
-          log::add('sigri_linky', 'info', 'Recupération des données ('.$resource_id.') depuis Enedis : OK');
-          break;
+            $this->Enedis_Results_Jeedom($resource_id, $content, $start_datetime);
+            log::add('sigri_linky', 'info', 'Recupération des données ('.$resource_id.') depuis Enedis : OK');
+            break;
         }
 
       }
@@ -417,54 +411,52 @@ class sigri_linky extends eqLogic
       
         log::add('sigri_linky', 'error', 'Enedis renvoi une erreur sur la page '.$resource_id);
         if (isset($obj['etat']['erreurText'])) { 
-          log::add('sigri_linky', 'error', 'Message d\'erreur : '.$obj['etat']['erreurText']);
+            log::add('sigri_linky', 'error', 'Message d\'erreur : '.$obj['etat']['erreurText']);
         }
         
       } else {
 
         if ($resource_id == "urlCdcHeure") { 
-          log::add('sigri_linky', 'debug', 'Traitement données heures');
-          $cmd = $this->getCmd(null, 'consoheure');
-          $delta = "30 minutes";
-          $start_date = $start_datetime;
-          $date_format = "Y-m-d H:i:00";
+            log::add('sigri_linky', 'debug', 'Traitement données heures');
+            $cmd = $this->getCmd(null, 'consoheure');
+            $delta = "30 minutes";
+            $start_date = $start_datetime;
+            $date_format = "Y-m-d H:i:00";
         } elseif ($resource_id == "urlCdcJour") { 
-          log::add('sigri_linky', 'debug', 'Traitement données jours');
-          $cmd = $this->getCmd(null, 'consojour');
-          $delta = "1 day";
-          $start_date = $obj['graphe']['periode']['dateDebut'];
-          $start_date = date_create_from_format('d/m/Y', $start_date);
-          $date_format = "Y-m-d";
+            log::add('sigri_linky', 'debug', 'Traitement données jours');
+            $cmd = $this->getCmd(null, 'consojour');
+            $delta = "1 day";
+            $start_date = $obj['graphe']['periode']['dateDebut'];
+            $start_date = date_create_from_format('d/m/Y', $start_date);
+            $date_format = "Y-m-d";
         } elseif ($resource_id == "urlCdcMois") { 
-          log::add('sigri_linky', 'debug', 'Traitement données mois');
-          $cmd = $this->getCmd(null, 'consomois');
-          $delta = "1 month";
-          $start_date = $obj['graphe']['periode']['dateDebut'];
-          $start_date = date_create_from_format('d/m/Y', $start_date);
-          $date_format = "Y-m-d";
+            log::add('sigri_linky', 'debug', 'Traitement données mois');
+            $cmd = $this->getCmd(null, 'consomois');
+            $delta = "1 month";
+            $start_date = $obj['graphe']['periode']['dateDebut'];
+            $start_date = date_create_from_format('d/m/Y', $start_date);
+            $date_format = "Y-m-d";
         } elseif ($resource_id == "urlCdcAn") { 
-          $cmd = $this->getCmd(null, 'consoan');
-          log::add('sigri_linky', 'debug', 'Traitement données ans');
-          $delta = "1 year";
-          $start_date = $obj['graphe']['periode']['dateDebut'];
-          $start_date = date_create_from_format('d/m/Y', $start_date);
-          $start_date = date_create($start_date->format('Y-1-1'));
-          $date_format = "Y-m-d";
+            $cmd = $this->getCmd(null, 'consoan');
+            log::add('sigri_linky', 'debug', 'Traitement données ans');
+            $delta = "1 year";
+            $start_date = $obj['graphe']['periode']['dateDebut'];
+            $start_date = date_create_from_format('d/m/Y', $start_date);
+            $start_date = date_create($start_date->format('Y-1-1'));
+            $date_format = "Y-m-d";
         }
         
         foreach ($obj['graphe']['data'] as &$value) {
-          $jeedom_event_date = $start_date->format($date_format);
-          if ($value['valeur'] == "-1" OR $value['valeur'] == "-2") {
-            log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Valeur incorrect : '.$value['valeur']);
-          } else {
-            log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Indice : '.$value['valeur'].' kWh');
-            $cmd->event($value['valeur'], $jeedom_event_date);
-          }
-          date_add($start_date,date_interval_create_from_date_string($delta));
+            $jeedom_event_date = $start_date->format($date_format);
+            if ($value['valeur'] == "-1" OR $value['valeur'] == "-2") {
+                log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Valeur incorrect : '.$value['valeur']);
+            } else {
+                log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Indice : '.$value['valeur'].' kWh');
+                $cmd->event($value['valeur'], $jeedom_event_date);
+            }
+            date_add($start_date,date_interval_create_from_date_string($delta));
         }
-
       }
-
     }
     
     public function GetUserAgent() 
@@ -540,32 +532,20 @@ class sigri_linky extends eqLogic
 
       $rand_key = array_rand($useragents);
       return $useragents[$rand_key];
-      
     }
-    
 }
 
 class sigri_linkyCmd extends cmd {
     /*     * *************************Attributs****************************** */
 
-
     /*     * ***********************Methode static*************************** */
 
-
     /*     * *********************Methode d'instance************************* */
-
-    /*
-     * Non obligatoire permet de demander de ne pas supprimer les commandes même si elles ne sont pas dans la nouvelle configuration de l'équipement envoyé en JS
-      public function dontRemoveCmd() {
-      return true;
-      }
-     */
 
     public function execute($_options = array()) {
         
     }
-
     /*     * **********************Getteur Setteur*************************** */
 }
 
-
+?>

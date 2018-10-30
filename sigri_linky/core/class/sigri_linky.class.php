@@ -1,461 +1,449 @@
 <?php
-
-/* This file is part of Jeedom.
- *
- * Jeedom is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Jeedom is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/* * ***************************Includes********************************* */
-require_once __DIR__ . '/../../../../core/php/core.inc.php';
-
-class sigri_linky extends eqLogic 
-{
-    /*     * *************************Attributs****************************** */
-
-    /*     * ***********************Methode static*************************** */
-
-    /*
-     * Fonction exécutée automatiquement toutes les minutes par Jeedom
-      public static function cron() {
-
-      }
-     */
-
-     /* Fonction exécutée automatiquement toutes les 5 minutes par Jeedom
-      public static function cron5() {
-
-      }
-     */
-
-    /*
-     * Fonction exécutée automatiquement tous les jours par Jeedom
-      public static function cronDayly() {
-
-      }
-     */
-
-    /*     * *********************Méthodes d'instance************************* */
-
-    /*public function preInsert() {
-        
-    }
-
-    public function postInsert() {
-        
-    }
-
-    public function preSave() {
-        
-    }
-
-    public function postSave() {
-        
-    }*/
-
-    public function preUpdate() 
-    {
-      if (empty($this->getConfiguration('identifiant'))) {
-        throw new Exception(__('L\'identifiant ne peut pas être vide',__FILE__));
-      }
-
-      if (empty($this->getConfiguration('password'))) {
-        throw new Exception(__('Le mot de passe ne peut etre vide',__FILE__));
-      }
-    }
-
-    public function postUpdate() 
-    {
-      if ( $this->getIsEnable() ){
-        $cmd = $this->getCmd(null, 'consoheure');
-        if ( ! is_object($cmd)) {
-          $cmd = new sigri_linkyCmd();
-          $cmd->setName('Consommation Horaire');
-          $cmd->setEqLogic_id($this->getId());
-          $cmd->setLogicalId('consoheure');
-          $cmd->setUnite('kW');
-          $cmd->setType('info');
-          $cmd->setSubType('numeric');
-          $cmd->setIsHistorized(1);
-          $cmd->setEventOnly(1);
-          $cmd->save();   
-        }    
-        $cmd = $this->getCmd(null, 'consojour');
-          
-        if ( ! is_object($cmd)) {
-          $cmd = new sigri_linkyCmd();
-          $cmd->setName('Consommation journalière');
-          $cmd->setEqLogic_id($this->getId());
-          $cmd->setLogicalId('consojour');
-          $cmd->setUnite('kWh');
-          $cmd->setType('info');
-          $cmd->setSubType('numeric');
-          $cmd->setIsHistorized(1);
-          $cmd->setEventOnly(1);
-          $cmd->save();   
-        }  
-        $cmd = $this->getCmd(null, 'consomois');
-          
-        if ( ! is_object($cmd)) {
-          $cmd = new sigri_linkyCmd();
-          $cmd->setName('Consommation Mensuelle');
-          $cmd->setEqLogic_id($this->getId());
-          $cmd->setLogicalId('consomois');
-          $cmd->setUnite('kWh');
-          $cmd->setType('info');
-          $cmd->setSubType('numeric');
-          $cmd->setIsHistorized(1);
-          $cmd->setEventOnly(1);
-          $cmd->save();   
-        }  
-        $cmd = $this->getCmd(null, 'consoan');
-          
-        if ( ! is_object($cmd)) {
-          $cmd = new sigri_linkyCmd();
-          $cmd->setName('Consommation annuelle');
-          $cmd->setEqLogic_id($this->getId());
-          $cmd->setLogicalId('consoan');
-          $cmd->setUnite('kWh');
-          $cmd->setType('info');
-          $cmd->setSubType('numeric');
-          $cmd->setIsHistorized(1);
-          $cmd->setEventOnly(1);
-          $cmd->save();   
-        }
-        
-      }
-    }
-
-    public function preRemove() {
-        
-    }
-
-    public function postRemove() {
-        
-    }
-
-    /*
-     * Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
-      public function toHtml($_version = 'dashboard') {
-
-      }
-     */
-
-    /*     * **********************Getteur Setteur*************************** */
-
-    public static function launch_sigri_linky() 
-    {
-      foreach (eqLogic::byType('sigri_linky', true) as $sigri_linky) {
-      
-        log::add('sigri_linky', 'info', 'Debut d\'interrogration Enedis');
-        if ($sigri_linky->getIsEnable() == 1) {
-          if (!empty($sigri_linky->getConfiguration('identifiant')) && !empty($sigri_linky->getConfiguration('password'))) {
-            
-            $cmd_date = $sigri_linky->getCmd(null, 'consojour');
-            if (is_object($cmd_date)) {
-              $value = $cmd_date->execCmd();
-              $collectDate = $cmd_date->getCollectDate();     
-              $command_date = new DateTime($collectDate);   
-              $start_date = new DateTime();     
-              $start_date->sub(new DateInterval('P1D'));
-              if(date_format($command_date, 'Y-m-d') == date_format($start_date, 'Y-m-d')) {
-                log::add('sigri_linky', 'debug', 'Donnees deja presentes pour aujourd\'hui');
-              } else { 
-              
-                $Useragent = $sigri_linky->GetUserAgent();
-                log::add('sigri_linky', 'debug', 'UserAgent pour ce lancement : '.$Useragent);
-                $API_cookies = $sigri_linky->Login_Enedis_API($Useragent);
-                
-                $cmd = $sigri_linky->getCmd(null, 'consoheure');
-                if (is_object($cmd)) {
-                  $end_date = new DateTime();
-                  $start_date = (new DateTime())->setTime(0,0);
-                  $start_date->sub(new DateInterval('P1D'));
-                  $sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcHeure", $start_date, $end_date);
-                }
-                
-                $cmd = $sigri_linky->getCmd(null, 'consojour');
-                if (is_object($cmd)) {
-                  $end_date = new DateTime();
-                  $start_date = new DateTime();
-                  $start_date->sub(new DateInterval('P30D'));
-                  $sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcJour", $start_date, $end_date);
-                }
-
-                $cmd = $sigri_linky->getCmd(null, 'consomois');
-                if (is_object($cmd)) {         
-                  $end_date = new DateTime();
-                  $start_date = new DateTime('first day of this month');
-                  $start_date->sub(new DateInterval('P12M'));
-                  $sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcMois", $start_date, $end_date);
-                }
-
-                $cmd = $sigri_linky->getCmd(null, 'consoan');
-                if (is_object($cmd)) {
-                  $end_date = new DateTime('first day of January');
-                  $start_date = new DateTime('first day of January');
-                  $start_date->sub(new DateInterval('P5Y'));
-                  $sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcAn", $start_date, $end_date);
-                }
-              }
-            }
-            log::add('sigri_linky', 'info', 'Fin d\'interrogration Enedis');
-          } else {
-            log::add('sigri_linky', 'error', 'Identifiants requis');
-          }
-        }
-      }
-    }
-
-    public function Login_Enedis_API($Useragent) 
-    {
-      log::add('sigri_linky', 'debug', 'Tentative d\'authentification sur Enedis');
-
-      $URL_LOGIN = "https://espace-client-connexion.enedis.fr/auth/UI/Login";
-      $URL_ACCUEIL = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers/accueil";
-
-      $data = array(
-          "IDToken1=".urlencode($this->getConfiguration('identifiant')),
-          "IDToken2=".urlencode($this->getConfiguration('password')),
-          "SunQueryParamsString=".base64_encode('realm=particuliers'),
-          "encoded=true",
-          "gx_charset=UTF-8",
-      );
-
-      for ($login_phase1_attemps = 1; $login_phase1_attemps <= 11; $login_phase1_attemps++) {
-
-        if ($login_phase1_attemps == 11) {
-          log::add('sigri_linky', 'error', 'Erreur de connexion au site Enedis (Phase 1)');
-          exit(1);
-        }
-        log::add('sigri_linky', 'debug', 'Connexion au site Enedis Phase 1 : Tentative '.$login_phase1_attemps.'/10');
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, implode('&', $data));
-        curl_setopt($ch, CURLOPT_URL, $URL_LOGIN);
-        curl_setopt($ch, CURLOPT_HEADER  ,1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER  ,1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        $content = curl_exec($ch);
-        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($http_status == "302") { 
-          preg_match_all('|Set-Cookie: (.*);|U', $content, $cookiesheader);   
-          $ResponseCookie = $cookiesheader[1];
-          foreach($ResponseCookie as $key => $val) {
-            $cookie_explode = explode('=', $val);
-            $cookies[$cookie_explode[0]]=$cookie_explode[1];
-          }
-          $cookie_iPlanetDirectoryPro = $cookies['iPlanetDirectoryPro'];
-          if($cookie_iPlanetDirectoryPro === "LOGOUT") {
-            log::add('sigri_linky', 'error', 'Erreur d\'identification');
-            exit(1);
-          } else {
-            log::add('sigri_linky', 'info', 'Connexion au site Enedis Phase 1 : OK');
-            break;
-          }
-        }
-      }
-
-      $headers = array(
-        "Cookie: iPlanetDirectoryPro=".$cookie_iPlanetDirectoryPro
-      );
-
-      for ($login_phase2_attemps = 1; $login_phase2_attemps <= 11; $login_phase2_attemps++) {
-
-        if ($login_phase2_attemps == 11) {
-          log::add('sigri_linky', 'error', 'Erreur de connexion au site Enedis (Phase 2)');
-          exit(1);
-        }
-        log::add('sigri_linky', 'debug', 'Connexion au site Enedis Phase 2 : Tentative '.$login_phase2_attemps.'/10');
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $URL_ACCUEIL);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_HEADER  ,1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER  ,1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_USERAGENT, $Useragent);
-        $content = curl_exec($ch);
-        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($http_status == "302") { 
-          preg_match_all('|Set-Cookie: (.*);|U', $content, $cookiesheader);   
-          $ResponseCookie = $cookiesheader[1];
-          foreach($ResponseCookie as $key => $val) {
-            $cookie_explode = explode('=', $val);
-            $cookies[$cookie_explode[0]]=$cookie_explode[1];
-          }
-          $cookie_JSESSIONID = $cookies['JSESSIONID'];
-          log::add('sigri_linky', 'info', 'Connexion au site Enedis Phase 2 : OK');
-          break;
-        }
-
-      }
-
-      $API_cookies = array(
-        "Cookie: iPlanetDirectoryPro=".$cookie_iPlanetDirectoryPro,
-        "Cookie: JSESSIONID=".$cookie_JSESSIONID,
-      );
-
-      log::add('sigri_linky', 'debug', 'Cookies d\'authentification OK : '.print_r($API_cookies));
-
-      log::add('sigri_linky', 'debug', 'Verification si demande des conditions d\'utilisation');
-      $ch = curl_init();
-      curl_setopt($ch, CURLOPT_URL, $URL_ACCUEIL);
-      curl_setopt($ch, CURLOPT_HTTPHEADER, $API_cookies);
-      curl_setopt($ch, CURLOPT_HEADER  ,1);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER  ,1);
-      curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,1);
-      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-      curl_setopt($ch, CURLOPT_USERAGENT, $Useragent);
-      $content = curl_exec($ch);
-      $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-      curl_close($ch);
-      
-		if ($http_status == "200") { 
-			preg_match("/\<title.*\>(.*)\<\/title\>/isU", $content, $matches);
-			if (strpos($matches[1], "Conditions d'utilisation") !== false) {
-			  log::add('sigri_linky', 'error', 'Enedis vous demande de reconfirmer les conditions d\'utilisation, merci de vous reconnecter via leur site web');
-			  exit(1);
-			} else {
-			  log::add('sigri_linky', 'debug', 'Pas de demande de conditions d\'utilisation : OK');
+	
+	/* This file is part of Jeedom.
+		*
+		* Jeedom is free software: you can redistribute it and/or modify
+		* it under the terms of the GNU General Public License as published by
+		* the Free Software Foundation, either version 3 of the License, or
+		* (at your option) any later version.
+		*
+		* Jeedom is distributed in the hope that it will be useful,
+		* but WITHOUT ANY WARRANTY; without even the implied warranty of
+		* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+		* GNU General Public License for more details.
+		*
+		* You should have received a copy of the GNU General Public License
+		* along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+	*/
+	
+	/* * ***************************Includes********************************* */
+	require_once __DIR__ . '/../../../../core/php/core.inc.php';
+	
+	class sigri_linky extends eqLogic 
+	{
+		/*     * *************************Attributs****************************** */
+		
+		/*     * ***********************Methode static*************************** */
+		
+		/*
+			* Fonction exécutée automatiquement toutes les minutes par Jeedom
+			public static function cron() {
+			
+			}
+		*/
+		
+		/* Fonction exécutée automatiquement toutes les 5 minutes par Jeedom
+			public static function cron5() {
+			
+			}
+		*/
+		
+		/*
+			* Fonction exécutée automatiquement tous les jours par Jeedom
+			public static function cronDayly() {
+			
+			}
+		*/
+		
+		/*     * *********************Méthodes d'instance************************* */
+		
+		/*public function preInsert() {
+			
+			}
+			
+			public function postInsert() {
+			
+			}
+			
+			public function preSave() {
+			
+			}
+			
+			public function postSave() {
+			
+		}*/
+		
+		public function preUpdate() 
+		{
+			if (empty($this->getConfiguration('identifiant'))) {
+				throw new Exception(__('L\'identifiant ne peut pas être vide',__FILE__));
+			}
+			
+			if (empty($this->getConfiguration('password'))) {
+				throw new Exception(__('Le mot de passe ne peut etre vide',__FILE__));
 			}
 		}
-	return $API_cookies;
-	}
-
-    public function Call_Enedis_API($cookies, $Useragent, $resource_id, $start_datetime=None, $end_datetime=None) 
-    {
-      $URL_CONSO = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers/suivi-de-consommation";
-
-      $prefix = '_lincspartdisplaycdc_WAR_lincspartcdcportlet_';
-
-      $start_date = $start_datetime->format('d/m/Y');
-      $end_date = $end_datetime->format('d/m/Y');
-      
-      $data = array(
-            $prefix."dateDebut"."=".$start_date,
-            $prefix."dateFin"."=".$end_date
-      );
-
-	$param = array(
-		"p_p_id=lincspartdisplaycdc_WAR_lincspartcdcportlet",
-		"p_p_lifecycle=2",
-		"p_p_state=normal",
-		"p_p_mode=view",
-		"p_p_resource_id=".$resource_id,
-		"p_p_cacheability=cacheLevelPage",
-		"p_p_col_id=column-1",
-		"p_p_col_pos=1",
-		"p_p_col_count=3"
-	);
-
-      for ($retreive_attemps = 1; $retreive_attemps <= 11; $retreive_attemps++) {
-
-        if ($retreive_attemps == 11) {
-          log::add('sigri_linky', 'error', 'Erreur lors de la récupération des données ('.$resource_id.') depuis Enedis');
-          break;
-        }
-        log::add('sigri_linky', 'info', 'Recupération des données ('.$resource_id.') depuis Enedis : Tentative '.$retreive_attemps.'/10');
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $URL_CONSO."?".implode('&', $param));
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, implode('&', $data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $cookies);
-        curl_setopt($ch, CURLOPT_HEADER  ,0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER  ,1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_USERAGENT, $Useragent);
-        $content = curl_exec($ch);
-        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($http_status == "200") { 
-            $this->Enedis_Results_Jeedom($resource_id, $content, $start_datetime);
-            log::add('sigri_linky', 'info', 'Recupération des données ('.$resource_id.') depuis Enedis : OK');
-            break;
-        }
-
-      }
-
-    }
-
-    public function Enedis_Results_Jeedom($resource_id, $content, $start_datetime) 
-    {
-
-      $obj = json_decode($content, true);
-      log::add('sigri_linky', 'debug',var_dump($obj));
-
-      if ($obj['etat']['valeur'] == "erreur") {
-      
-        log::add('sigri_linky', 'error', 'Enedis renvoi une erreur sur la page '.$resource_id);
-        if (isset($obj['etat']['erreurText'])) { 
-            log::add('sigri_linky', 'error', 'Message d\'erreur : '.$obj['etat']['erreurText']);
-        }
-        
-      } else {
-
-        if ($resource_id == "urlCdcHeure") { 
-            log::add('sigri_linky', 'debug', 'Traitement données heures');
-            $cmd = $this->getCmd(null, 'consoheure');
-            $delta = "30 minutes";
-            $start_date = $start_datetime;
-            $date_format = "Y-m-d H:i:00";
-        } elseif ($resource_id == "urlCdcJour") { 
-            log::add('sigri_linky', 'debug', 'Traitement données jours');
-            $cmd = $this->getCmd(null, 'consojour');
-            $delta = "1 day";
-            $start_date = $obj['graphe']['periode']['dateDebut'];
-            $start_date = date_create_from_format('d/m/Y', $start_date);
-            $date_format = "Y-m-d";
-        } elseif ($resource_id == "urlCdcMois") { 
-            log::add('sigri_linky', 'debug', 'Traitement données mois');
-            $cmd = $this->getCmd(null, 'consomois');
-            $delta = "1 month";
-            $start_date = $obj['graphe']['periode']['dateDebut'];
-            $start_date = date_create_from_format('d/m/Y', $start_date);
-            $date_format = "Y-m-d";
-        } elseif ($resource_id == "urlCdcAn") { 
-            $cmd = $this->getCmd(null, 'consoan');
-            log::add('sigri_linky', 'debug', 'Traitement données ans');
-            $delta = "1 year";
-            $start_date = $obj['graphe']['periode']['dateDebut'];
-            $start_date = date_create_from_format('d/m/Y', $start_date);
-            $start_date = date_create($start_date->format('Y-1-1'));
-            $date_format = "Y-m-d";
-        }
-        
-        foreach ($obj['graphe']['data'] as &$value) {
-            $jeedom_event_date = $start_date->format($date_format);
-            if ($value['valeur'] == "-1" OR $value['valeur'] == "-2") {
-                log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Valeur incorrect : '.$value['valeur']);
-            } else {
-                log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Indice : '.$value['valeur'].' kWh');
-                $cmd->event($value['valeur'], $jeedom_event_date);
-            }
-            date_add($start_date,date_interval_create_from_date_string($delta));
-        }
-      }
-    }
-    
-    public function GetUserAgent() 
-    {
-		$useragents = array(
+		
+		public function postUpdate() 
+		{
+			if ( $this->getIsEnable() ){
+				$cmd = $this->getCmd(null, 'consoheure');
+				if ( ! is_object($cmd)) {
+					$cmd = new sigri_linkyCmd();
+					$cmd->setName('Consommation Horaire');
+					$cmd->setEqLogic_id($this->getId());
+					$cmd->setLogicalId('consoheure');
+					$cmd->setUnite('kW');
+					$cmd->setType('info');
+					$cmd->setSubType('numeric');
+					$cmd->setIsHistorized(1);
+					$cmd->setEventOnly(1);
+					$cmd->save();
+				}
+				
+				$cmd = $this->getCmd(null, 'consojour');
+				if ( ! is_object($cmd)) {
+					$cmd = new sigri_linkyCmd();
+					$cmd->setName('Consommation journalière');
+					$cmd->setEqLogic_id($this->getId());
+					$cmd->setLogicalId('consojour');
+					$cmd->setUnite('kWh');
+					$cmd->setType('info');
+					$cmd->setSubType('numeric');
+					$cmd->setIsHistorized(1);
+					$cmd->setEventOnly(1);
+					$cmd->save();
+				}
+				$cmd = $this->getCmd(null, 'consomois');
+				if ( ! is_object($cmd)) {
+					$cmd = new sigri_linkyCmd();
+					$cmd->setName('Consommation Mensuelle');
+					$cmd->setEqLogic_id($this->getId());
+					$cmd->setLogicalId('consomois');
+					$cmd->setUnite('kWh');
+					$cmd->setType('info');
+					$cmd->setSubType('numeric');
+					$cmd->setIsHistorized(1);
+					$cmd->setEventOnly(1);
+					$cmd->save();
+				}
+				
+				$cmd = $this->getCmd(null, 'consoan');
+				if ( ! is_object($cmd)) {
+					$cmd = new sigri_linkyCmd();
+					$cmd->setName('Consommation annuelle');
+					$cmd->setEqLogic_id($this->getId());
+					$cmd->setLogicalId('consoan');
+					$cmd->setUnite('kWh');
+					$cmd->setType('info');
+					$cmd->setSubType('numeric');
+					$cmd->setIsHistorized(1);
+					$cmd->setEventOnly(1);
+					$cmd->save();
+				}
+			}
+		}
+		
+		public function preRemove() {
+			
+		}
+		
+		public function postRemove() {
+			
+		}
+		
+		/*
+			// Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
+			public function toHtml($_version = 'dashboard') {
+			}
+		*/
+		
+		/** **********************Getteur Setteur*************************** */
+		
+		public static function launch_sigri_linky() 
+		{
+			foreach (eqLogic::byType('sigri_linky', true) as $sigri_linky) {
+				
+				log::add('sigri_linky', 'info', 'Debut d\'interrogration Enedis');
+				if ($sigri_linky->getIsEnable() == 1) {
+					if (!empty($sigri_linky->getConfiguration('identifiant')) && !empty($sigri_linky->getConfiguration('password'))) {
+						
+						$cmd_date = $sigri_linky->getCmd(null, 'consojour');
+						if (is_object($cmd_date)) {
+							$value = $cmd_date->execCmd();
+							$collectDate = $cmd_date->getCollectDate();
+							$command_date = new DateTime($collectDate);
+							$start_date = new DateTime();
+							$start_date->sub(new DateInterval('P1D'));
+							if(date_format($command_date, 'Y-m-d') == date_format($start_date, 'Y-m-d')) {
+								log::add('sigri_linky', 'debug', 'Donnees deja presentes pour aujourd\'hui');
+							} else {
+								$Useragent = $sigri_linky->GetUserAgent();
+								log::add('sigri_linky', 'debug', 'UserAgent pour ce lancement : '.$Useragent);
+								$API_cookies = $sigri_linky->Login_Enedis_API($Useragent);
+								
+								$cmd = $sigri_linky->getCmd(null, 'consoheure');
+								if (is_object($cmd)) {
+									$end_date = new DateTime();
+									$start_date = (new DateTime())->setTime(0,0);
+									$start_date->sub(new DateInterval('P1D'));
+									$sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcHeure", $start_date, $end_date);
+								}
+								
+								$cmd = $sigri_linky->getCmd(null, 'consojour');
+								if (is_object($cmd)) {
+									$end_date = new DateTime();
+									$start_date = new DateTime();
+									$start_date->sub(new DateInterval('P30D'));
+									$sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcJour", $start_date, $end_date);
+								}
+								
+								$cmd = $sigri_linky->getCmd(null, 'consomois');
+								if (is_object($cmd)) {
+									$end_date = new DateTime();
+									$start_date = new DateTime('first day of this month');
+									$start_date->sub(new DateInterval('P12M'));
+									$sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcMois", $start_date, $end_date);
+								}
+								
+								$cmd = $sigri_linky->getCmd(null, 'consoan');
+								if (is_object($cmd)) {
+									$end_date = new DateTime('first day of January');
+									$start_date = new DateTime('first day of January');
+									$start_date->sub(new DateInterval('P5Y'));
+									$sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcAn", $start_date, $end_date);
+								}
+							}
+						}
+						log::add('sigri_linky', 'info', 'Fin d\'interrogration Enedis');
+						} else {
+						log::add('sigri_linky', 'error', 'Identifiants requis');
+					}
+				}
+			}
+		}
+		
+		public function Login_Enedis_API($Useragent) 
+		{
+			log::add('sigri_linky', 'debug', 'Tentative d\'authentification sur Enedis');
+			
+			$URL_LOGIN = "https://espace-client-connexion.enedis.fr/auth/UI/Login";
+			$URL_ACCUEIL = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers/accueil";
+			
+			$data = array(
+			"IDToken1=".urlencode($this->getConfiguration('identifiant')),
+			"IDToken2=".urlencode($this->getConfiguration('password')),
+			"SunQueryParamsString=".base64_encode('realm=particuliers'),
+			"encoded=true",
+			"gx_charset=UTF-8",
+			);
+			
+			for ($login_phase1_attemps = 1; $login_phase1_attemps <= 11; $login_phase1_attemps++) {
+				
+				if ($login_phase1_attemps == 11) {
+					log::add('sigri_linky', 'error', 'Erreur de connexion au site Enedis (Phase 1)');
+					exit(1);
+				}
+				log::add('sigri_linky', 'debug', 'Connexion au site Enedis Phase 1 : Tentative '.$login_phase1_attemps.'/10');
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_POST, 1);
+				curl_setopt($ch, CURLOPT_POSTFIELDS, implode('&', $data));
+				curl_setopt($ch, CURLOPT_URL, $URL_LOGIN);
+				curl_setopt($ch, CURLOPT_HEADER  ,1);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER  ,1);
+				curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,0);
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+				$content = curl_exec($ch);
+				$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+				curl_close($ch);
+				
+				if ($http_status == "302") { 
+					preg_match_all('|Set-Cookie: (.*);|U', $content, $cookiesheader);   
+					$ResponseCookie = $cookiesheader[1];
+					foreach($ResponseCookie as $key => $val) {
+						$cookie_explode = explode('=', $val);
+						$cookies[$cookie_explode[0]]=$cookie_explode[1];
+					}
+					$cookie_iPlanetDirectoryPro = $cookies['iPlanetDirectoryPro'];
+					if($cookie_iPlanetDirectoryPro === "LOGOUT") {
+						log::add('sigri_linky', 'error', 'Erreur d\'identification');
+						exit(1);
+						} else {
+						log::add('sigri_linky', 'info', 'Connexion au site Enedis Phase 1 : OK');
+						break;
+					}
+				}
+			}
+			
+			$headers = array(
+				"Cookie: iPlanetDirectoryPro=".$cookie_iPlanetDirectoryPro
+			);
+			
+			for ($login_phase2_attemps = 1; $login_phase2_attemps <= 11; $login_phase2_attemps++) {
+				
+				if ($login_phase2_attemps == 11) {
+					log::add('sigri_linky', 'error', 'Erreur de connexion au site Enedis (Phase 2)');
+					exit(1);
+				}
+				log::add('sigri_linky', 'debug', 'Connexion au site Enedis Phase 2 : Tentative '.$login_phase2_attemps.'/10');
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL, $URL_ACCUEIL);
+				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+				curl_setopt($ch, CURLOPT_HEADER  ,1);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER  ,1);
+				curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,0);
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+				curl_setopt($ch, CURLOPT_USERAGENT, $Useragent);
+				$content = curl_exec($ch);
+				$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+				curl_close($ch);
+				
+				if ($http_status == "302") { 
+					preg_match_all('|Set-Cookie: (.*);|U', $content, $cookiesheader);   
+					$ResponseCookie = $cookiesheader[1];
+					foreach($ResponseCookie as $key => $val) {
+						$cookie_explode = explode('=', $val);
+						$cookies[$cookie_explode[0]]=$cookie_explode[1];
+					}
+					$cookie_JSESSIONID = $cookies['JSESSIONID'];
+					log::add('sigri_linky', 'info', 'Connexion au site Enedis Phase 2 : OK');
+					break;
+				}
+				
+			}
+			
+			$API_cookies = array(
+			"Cookie: iPlanetDirectoryPro=".$cookie_iPlanetDirectoryPro,
+			"Cookie: JSESSIONID=".$cookie_JSESSIONID,
+			);
+			
+			log::add('sigri_linky', 'debug', 'Cookies d\'authentification OK : '.print_r($API_cookies));
+			
+			log::add('sigri_linky', 'debug', 'Verification si demande des conditions d\'utilisation');
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $URL_ACCUEIL);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $API_cookies);
+			curl_setopt($ch, CURLOPT_HEADER  ,1);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER  ,1);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION  ,1);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+			curl_setopt($ch, CURLOPT_USERAGENT, $Useragent);
+			$content = curl_exec($ch);
+			$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			curl_close($ch);
+			
+			if ($http_status == "200") { 
+				preg_match("/\<title.*\>(.*)\<\/title\>/isU", $content, $matches);
+				if (strpos($matches[1], "Conditions d'utilisation") !== false) {
+					log::add('sigri_linky', 'error', 'Enedis vous demande de reconfirmer les conditions d\'utilisation, merci de vous reconnecter via leur site web');
+					exit(1);
+					} else {
+					log::add('sigri_linky', 'debug', 'Pas de demande de conditions d\'utilisation : OK');
+				}
+			}
+			return $API_cookies;
+		}
+		
+		public function Call_Enedis_API($cookies, $Useragent, $resource_id, $start_datetime=None, $end_datetime=None) 
+		{
+			$URL_CONSO = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers/suivi-de-consommation";
+			
+			$prefix = '_lincspartdisplaycdc_WAR_lincspartcdcportlet_';
+			
+			$start_date = $start_datetime->format('d/m/Y');
+			$end_date = $end_datetime->format('d/m/Y');
+			
+			$data = array(
+				$prefix."dateDebut"."=".$start_date,
+				$prefix."dateFin"."=".$end_date
+			);
+			
+			$param = array(
+				"p_p_id=lincspartdisplaycdc_WAR_lincspartcdcportlet",
+				"p_p_lifecycle=2",
+				"p_p_state=normal",
+				"p_p_mode=view",
+				"p_p_resource_id=".$resource_id,
+				"p_p_cacheability=cacheLevelPage",
+				"p_p_col_id=column-1",
+				"p_p_col_pos=1",
+				"p_p_col_count=3"
+			);
+			
+			for ($retreive_attemps = 1; $retreive_attemps <= 11; $retreive_attemps++) {
+				
+				if ($retreive_attemps == 11) {
+					log::add('sigri_linky', 'error', 'Erreur lors de la récupération des données ('.$resource_id.') depuis Enedis');
+					break;
+				}
+				log::add('sigri_linky', 'info', 'Recupération des données ('.$resource_id.') depuis Enedis : Tentative '.$retreive_attemps.'/10');
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL, $URL_CONSO."?".implode('&', $param));
+				curl_setopt($ch, CURLOPT_POST, 1);
+				curl_setopt($ch, CURLOPT_POSTFIELDS, implode('&', $data));
+				curl_setopt($ch, CURLOPT_HTTPHEADER, $cookies);
+				curl_setopt($ch, CURLOPT_HEADER, 0);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 0);
+				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+				curl_setopt($ch, CURLOPT_USERAGENT, $Useragent);
+				$content = curl_exec($ch);
+				$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+				curl_close($ch);
+				
+				if ($http_status == "200") {
+					$this->Enedis_Results_Jeedom($resource_id, $content, $start_datetime);
+					log::add('sigri_linky', 'info', 'Recupération des données ('.$resource_id.') depuis Enedis : OK');
+					break;
+				}
+			}
+		}
+		
+		public function Enedis_Results_Jeedom($resource_id, $content, $start_datetime) {
+			$obj = json_decode($content, true);
+			log::add('sigri_linky', 'debug',var_dump($obj));
+			
+			if ($obj['etat']['valeur'] == "erreur") {
+				log::add('sigri_linky', 'error', 'Enedis renvoi une erreur sur la page '.$resource_id);
+				if (isset($obj['etat']['erreurText'])) { 
+					log::add('sigri_linky', 'error', 'Message d\'erreur : '.$obj['etat']['erreurText']);
+				}
+			} else {
+				if ($resource_id == "urlCdcHeure") {
+					log::add('sigri_linky', 'debug', 'Traitement données heures');
+					$cmd = $this->getCmd(null, 'consoheure');
+					$delta = "30 minutes";
+					$start_date = $start_datetime;
+					$date_format = "Y-m-d H:i:00";
+					} elseif ($resource_id == "urlCdcJour") { 
+					log::add('sigri_linky', 'debug', 'Traitement données jours');
+					$cmd = $this->getCmd(null, 'consojour');
+					$delta = "1 day";
+					$start_date = $obj['graphe']['periode']['dateDebut'];
+					$start_date = date_create_from_format('d/m/Y', $start_date);
+					$date_format = "Y-m-d";
+					} elseif ($resource_id == "urlCdcMois") { 
+					log::add('sigri_linky', 'debug', 'Traitement données mois');
+					$cmd = $this->getCmd(null, 'consomois');
+					$delta = "1 month";
+					$start_date = $obj['graphe']['periode']['dateDebut'];
+					$start_date = date_create_from_format('d/m/Y', $start_date);
+					$date_format = "Y-m-d";
+					} elseif ($resource_id == "urlCdcAn") { 
+					$cmd = $this->getCmd(null, 'consoan');
+					log::add('sigri_linky', 'debug', 'Traitement données ans');
+					$delta = "1 year";
+					$start_date = $obj['graphe']['periode']['dateDebut'];
+					$start_date = date_create_from_format('d/m/Y', $start_date);
+					$start_date = date_create($start_date->format('Y-1-1'));
+					$date_format = "Y-m-d";
+				}
+				
+				foreach ($obj['graphe']['data'] as &$value) {
+					$jeedom_event_date = $start_date->format($date_format);
+					if ($value['valeur'] == "-1" OR $value['valeur'] == "-2") {
+						log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Valeur incorrect : '.$value['valeur']);
+					} else {
+						log::add('sigri_linky', 'debug', 'Date : '.$jeedom_event_date.' : Indice : '.$value['valeur'].' kWh');
+						$cmd->event($value['valeur'], $jeedom_event_date);
+					}
+					date_add($start_date,date_interval_create_from_date_string($delta));
+				}
+			}
+		}
+		
+		public function GetUserAgent() {
+			$useragents = array(
 			"Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.19 (KHTML, like Gecko) Chrome/1.0.154.53 Safari/525.19",
 			"Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.19 (KHTML, like Gecko) Chrome/1.0.154.36 Safari/525.19",
 			"Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.10 (KHTML, like Gecko) Chrome/7.0.540.0 Safari/534.10",
@@ -521,24 +509,15 @@ class sigri_linky extends eqLogic
 			"Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0",
 			"Mozilla/5.0 (Windows NT 6.1; WOW64; rv:33.0) Gecko/20100101 Firefox/33.0",
 			"Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
-		);
-
-		$rand_key = array_rand($useragents);
-		return $useragents[$rand_key];
+			);
+			
+			$rand_key = array_rand($useragents);
+			return $useragents[$rand_key];
+		}
 	}
-}
-
-class sigri_linkyCmd extends cmd {
-	/************************Attributs*******************************/
-
-	/************************Methode static**************************/
-
-	/************************Methode d'instance**********************/
-
-	public function execute($_options = array()) {
-		
+	
+	class sigri_linkyCmd extends cmd {
+		public function execute($_options = array()) {
+		}
 	}
-	/************************Getteur Setteur*************************/
-}
-
 ?>

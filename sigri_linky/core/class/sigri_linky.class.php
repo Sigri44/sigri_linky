@@ -182,7 +182,7 @@
 								
 								$cmd = $sigri_linky->getCmd(null, 'consojour');
 								if (is_object($cmd)) {
-									$end_date = new DateTime();
+									$end_date = new DateTime()-1;
 									$start_date = new DateTime();
 									$start_date->sub(new DateInterval('P30D'));
 									$sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcJour", $start_date, $end_date);
@@ -206,7 +206,7 @@
 							}
 						}
 						log::add('sigri_linky', 'info', 'Fin d\'interrogration Enedis');
-						} else {
+					} else {
 						log::add('sigri_linky', 'error', 'Identifiants requis');
 					}
 				}
@@ -221,11 +221,11 @@
 			$URL_ACCUEIL = "https://espace-client-particuliers.enedis.fr/group/espace-particuliers/accueil";
 			
 			$data = array(
-			"IDToken1=".urlencode($this->getConfiguration('identifiant')),
-			"IDToken2=".urlencode($this->getConfiguration('password')),
-			"SunQueryParamsString=".base64_encode('realm=particuliers'),
-			"encoded=true",
-			"gx_charset=UTF-8",
+				"IDToken1=".urlencode($this->getConfiguration('identifiant')),
+				"IDToken2=".urlencode($this->getConfiguration('password')),
+				"SunQueryParamsString=".base64_encode('realm=particuliers'),
+				"encoded=true",
+				"gx_charset=UTF-8",
 			);
 			
 			for ($login_phase1_attemps = 1; $login_phase1_attemps <= 11; $login_phase1_attemps++) {

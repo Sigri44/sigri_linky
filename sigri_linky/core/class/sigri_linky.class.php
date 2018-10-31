@@ -182,7 +182,7 @@
 								
 								$cmd = $sigri_linky->getCmd(null, 'consojour');
 								if (is_object($cmd)) {
-									$end_date = new DateTime()-1;
+									$end_date = new DateTime();
 									$start_date = new DateTime();
 									$start_date->sub(new DateInterval('P30D'));
 									$sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcJour", $start_date, $end_date);

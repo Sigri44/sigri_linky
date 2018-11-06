@@ -165,9 +165,9 @@
 							$command_date = new DateTime($collectDate);
 							$start_date = new DateTime();
 							$start_date->sub(new DateInterval('P1D'));
-							/*if(date_format($command_date, 'Y-m-d') == date_format($start_date, 'Y-m-d')) {
+							if(date_format($command_date, 'Y-m-d') == date_format($start_date, 'Y-m-d')) {
 								log::add('sigri_linky', 'debug', 'Donnees deja presentes pour aujourd\'hui');
-							} else {*/
+							} else {
 								$Useragent = $sigri_linky->GetUserAgent();
 								log::add('sigri_linky', 'debug', 'UserAgent pour ce lancement : '.$Useragent);
 								$API_cookies = $sigri_linky->Login_Enedis_API($Useragent);
@@ -203,7 +203,7 @@
 									$start_date->sub(new DateInterval('P5Y'));
 									$sigri_linky->Call_Enedis_API($API_cookies, $Useragent, "urlCdcAn", $start_date, $end_date);
 								}
-							/*}*/
+							}
 						}
 						log::add('sigri_linky', 'info', 'Fin d\'interrogration Enedis');
 					} else {

@@ -4,8 +4,11 @@
 	"licence" : "AGPL",
 	"author" : "Sigri44",
 	"require" : "3.0",
+	"version": "1.0",
 	"category" : "energy",
 	"hasDependency" : false,
 	"hasOwnDeamon" : false,
-	"maxDependancyInstallTime" : 0
+	"maxDependancyInstallTime" : 0,
+	"documentation": "https://github.com/Sigri44/sigri_linky",
+	"changelog": "https://github.com/Sigri44/sigri_linky"
 }

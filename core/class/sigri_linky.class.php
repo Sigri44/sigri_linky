@@ -141,13 +141,34 @@
 		public function postRemove() {
 			
 		}
-		
-		/*
-			// Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
-			public function toHtml($_version = 'dashboard') {
+
+		public function toHtml($_version = 'dashboard') {
+		$replace = $this->preToHtml($_version);
+				if (!is_array($replace)) {
+					return $replace;
+				}
+				$version = jeedom::versionAlias($_version);
+				if ($this->getDisplay('hideOn' . $version) == 1) {
+					return '';
+				}
+			/* ------------ Ajouter votre code ici ------------*/
+				foreach ($this->getCmd('info') as $cmd) {
+				$replace['#' . $cmd->getLogicalId() . '_history#'] = '';
+				$replace['#' . $cmd->getLogicalId() . '_id#'] = $cmd->getId();
+				$replace['#' . $cmd->getLogicalId() . '#'] = $cmd->execCmd();
+				$replace['#' . $cmd->getLogicalId() . '_collect#'] = $cmd->getCollectDate();
+				if ($cmd->getLogicalId() == 'encours'){
+					$replace['#thumbnail#'] = $cmd->getDisplay('icon');
+				}
+				if ($cmd->getIsHistorized() == 1) {
+					$replace['#' . $cmd->getLogicalId() . '_history#'] = 'history cursor';
+				}
 			}
-		*/
-		
+			/* ------------ N'ajouter plus de code apres ici------------ */
+
+			return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'sigriLinky', 'sigriLinky')));
+		}
+
 		/** **********************Getteur Setteur*************************** */
 		
 		public static function launch_sigri_linky() 

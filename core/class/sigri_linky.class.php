@@ -167,7 +167,7 @@
 			$replace['#consoan#'] = intval($replace['#consoan#']);
 			/* ------------ N'ajouter plus de code apres ici------------ */
 
-			return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'sigriLinky', 'sigri_linky')));
+			return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'salvialf', 'sigri_linky')));
 		}
 
 		/** **********************Getteur Setteur*************************** */

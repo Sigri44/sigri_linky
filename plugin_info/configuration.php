@@ -29,9 +29,10 @@ if (!isConnect('admin')) {
 				Ce plugin utilise le site Enedis pour obtenir les informations de votre consommation depuis votre compteur Linky<br />
 				Si vous n'avez pas encore de compte Enedis, vous pouvez l'ouvrir 
 				<a href="https://espace-client-particuliers.enedis.fr/web/espace-particuliers/creation-de-compte" target="_blank" > en cliquant ici</a>.<br />
-				Pour acceder aux donnees : creer une vue, un design pour charger le graphique, ou consulter l'historique.
 				<br /><br />
 				*Librement inspiré du module d'Edouard Marchand, sous license AGPL.
+				<br /><br />
+				Utilisation du <code>widget - LinkyV4</code> de Salvialf comme template.
 				<br /><br />
 				Contributions : Bugdamon, glenan
 			</div>

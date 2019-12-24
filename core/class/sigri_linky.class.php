@@ -80,7 +80,7 @@
 				$cmd = $this->getCmd(null, 'consoheure');
 				if ( ! is_object($cmd)) {
 					$cmd = new sigri_linkyCmd();
-					$cmd->setName('Consommation Horaire');
+					$cmd->setName('Consommation horaire');
 					$cmd->setEqLogic_id($this->getId());
 					$cmd->setLogicalId('consoheure');
 					$cmd->setUnite('kW');
@@ -107,7 +107,7 @@
 				$cmd = $this->getCmd(null, 'consomois');
 				if ( ! is_object($cmd)) {
 					$cmd = new sigri_linkyCmd();
-					$cmd->setName('Consommation Mensuelle');
+					$cmd->setName('Consommation mensuelle');
 					$cmd->setEqLogic_id($this->getId());
 					$cmd->setLogicalId('consomois');
 					$cmd->setUnite('kWh');

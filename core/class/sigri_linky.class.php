@@ -307,7 +307,8 @@
 			"Cookie: JSESSIONID=".$cookie_JSESSIONID,
 			);
 			
-			log::add('sigri_linky', 'debug', 'Cookies d\'authentification OK : '.print_r($API_cookies));
+			// TODO : Fix args (logs into cron_execution)
+			//log::add('sigri_linky', 'debug', 'Cookies d\'authentification OK : '.print_r($API_cookies));
 			
 			log::add('sigri_linky', 'debug', 'Verification si demande des conditions d\'utilisation');
 			$ch = curl_init();
@@ -391,7 +392,8 @@
 		
 		public function Enedis_Results_Jeedom($resource_id, $content, $start_datetime) {
 			$obj = json_decode($content, true);
-			log::add('sigri_linky', 'debug',var_dump($obj));
+			// TODO : Fix print_r args (logs into cron_execution)
+			//log::add('sigri_linky', 'debug',var_dump($obj));
 			
 			if ($obj['etat']['valeur'] == "erreur") {
 				log::add('sigri_linky', 'error', 'Enedis renvoi une erreur sur la page '.$resource_id);

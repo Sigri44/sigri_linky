@@ -1,0 +1,85 @@
+@font-face {
+	font-family: "Digital-7";
+	src:  url("../font/digital-7.ttf") format("truetype");
+}
+span.led_cligno {
+	width: 10px;
+	height: 10px;
+	-webkit-animation: cligno 2s infinite;
+	animation: cligno 2s infinite;
+	position: absolute;
+	top:5px;
+	left:48%;
+	z-index:-1;
+}
+@-webkit-keyframes cligno {
+	from {background-color: lime;}
+	to {background-color: #181818;}
+}
+
+.widget-Linky_V4 {
+	text-align: center;
+}
+
+.widget-Linky_V4 div.fontDigital{
+	font-family: "Digital-7";
+	position:absolute;
+	color:#000000;
+	letter-spacing: 2px;
+	font-size:22px;
+	width:60%;
+	text-align:right;
+}
+.widget-Linky_V4 div.fontName{
+	font-family: "Digital-7";
+	position:absolute;
+	color:#505050;
+	letter-spacing: 1px;
+	font-size:16px;
+}
+.widget-Linky_V4 div.fontUnite{
+	font-family: "Digital-7";
+	position:absolute;
+	color:#505050;
+	letter-spacing: 1px;
+	font-size:16px;
+	width:40%;
+	left:61%;
+	text-align:left;
+}
+.widget-Linky_V4 div.annualName {
+	top:83px;
+}
+.widget-Linky_V4 div.annual {
+	top:99px;
+}
+.widget-Linky_V4 div.annualUnite {
+	top:101px;
+}
+.widget-Linky_V4 div.monthlyName {
+	top:119px;
+}
+.widget-Linky_V4 div.monthly {
+	top: 135px;
+}
+.widget-Linky_V4 div.monthlyUnite {
+	top: 137px;
+}
+.widget-Linky_V4 div.dayName {
+	top:155px;
+}
+.widget-Linky_V4 div.day {
+	top: 171px;
+}
+.widget-Linky_V4 div.dayUnite {
+	top:173px;
+}
+.widget-Linky_V4 div.hourName {
+	top:191px;
+}
+.widget-Linky_V4 div.hour {
+	top:207px;
+}
+.widget-Linky_V4 div.hourUnite {
+	top:209px;
+}

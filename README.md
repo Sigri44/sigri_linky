@@ -10,3 +10,4 @@ Ce plugin utilise le site Enedis pour obtenir les informations de votre consomma
 
 - Correction du bug J-1
 - Ajout d'une option pour importer jusqu'à J-30
+- Ajout d'un mode "Production", pour récupérer l'énergie que gagne un producteur d'électricité
